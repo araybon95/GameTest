@@ -1,5 +1,7 @@
 # Ashen Expedition
 
+Scripts and materials for GoDot
+
 A Godot 4 combat prototype with three hero decks, party turns, and a dark card battle interface.
 
 Open `project.godot` in Godot 4.6 or later and press F6 on `battle.tscn`, or F5 to run the project. The original `Scripts` file is now `battle.gd`.
