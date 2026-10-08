@@ -3,14 +3,14 @@ extends Control
 ## Combat uses the saved scene nodes and their editor signal connections.
 ## Artwork is optional: drop transparent PNG files into the paths documented in README.md.
 
-const BG = "#141922"
-const PANEL = "#222B39"
-const PANEL_DARK = "#1A2230"
-const GOLD = "#B99A65"
-const IVORY = "#F5E9D5"
-const MUTED = "#BCC4CC"
-const RED = "#E9978B"
-const GREEN = "#A5D5B3"
+const BG = "#0D0A0C"
+const PANEL = "#211519"
+const PANEL_DARK = "#130D10"
+const GOLD = "#8F4546"
+const IVORY = "#EADDD0"
+const MUTED = "#B5A2A3"
+const RED = "#DF7870"
+const GREEN = "#AAA487"
 const HERO_ORDER = ["Warden", "Ranger", "Occultist"]
 
 const STARTER_DECKS = {
@@ -358,17 +358,18 @@ func _build_interface() -> void:
 	hand_container = $CardHand/Cards
 	log_container = $BattleLog
 	end_turn_button = $EndTurnButton
-	enemy_label = $EnemyInfo
-	enemy_intent_label = $EnemyIntent
+	enemy_label = $Enemy/EnemyInfo
+	enemy_intent_label = $Enemy/EnemyIntent
 	enemy_art = $Enemy
 	$Background.color = Color(BG)
+	enemy_intent_label.add_theme_color_override("font_color", Color(RED))
 	for hero_name in HERO_ORDER:
 		var button: Button = get_node("Heros/" + hero_name)
 		hero_buttons[hero_name] = button
 		hero_portraits[hero_name] = button
-		_style_meter(button.get_node("HealthBar"), Color("#A44542"))
-		_style_meter(button.get_node("StressBar"), Color("#927CAD"))
-	_style_meter($Enemy/HealthBar, Color("#A44542"))
+		_style_meter(button.get_node("HealthBar"), Color("#AF343C"))
+		_style_meter(button.get_node("StressBar"), Color("#79435C"))
+	_style_meter($Enemy/HealthBar, Color("#AF343C"))
 
 
 func _style_meter(meter: ProgressBar, tint: Color) -> void:
@@ -422,7 +423,7 @@ func _create_card_view(card_id: String, card: Dictionary) -> Button:
 
 
 func _art_slot(parent: Control, texture_path: String, fallback: String, min_size: Vector2) -> Control:
-	var frame := _make_panel(Color("#303848"))
+	var frame := _make_panel(Color("#25171D"))
 	frame.custom_minimum_size = min_size
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(frame)
@@ -466,14 +467,14 @@ func _make_button(value: String, min_size: Vector2) -> Button:
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color", "font_focus_color"]:
 		button.add_theme_color_override(state, Color(IVORY))
 	var normal := _style(Color(PANEL), Color(GOLD))
-	var hover := _style(Color("#3A475B"), Color("#DDC58B"))
-	var pressed := _style(Color("#574934"), Color("#DDC58B"))
-	var disabled := _style(Color("#343941"), Color("#6E7276"))
+	var hover := _style(Color("#452029"), Color("#D68177"))
+	var pressed := _style(Color("#5D202D"), Color("#D68177"))
+	var disabled := _style(Color("#171216"), Color("#4B343D"))
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", pressed)
 	button.add_theme_stylebox_override("disabled", disabled)
-	button.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("#EADCB7")))
+	button.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("#E6A095")))
 	return button
 
 
