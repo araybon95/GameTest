@@ -1,7 +1,17 @@
 # GameTest
 
-Project imported from Updated1.zip. The outer project is the source; the nested duplicate and generated Godot cache are excluded.
+Godot combat project based on Updated1.zip, preserving its assets, scenes, data, and scripts folders and original combat node names.
 
-Import project.godot into Godot 4.7 (the version declared by the uploaded project). The combat scene is scenes/combat/combatscene.tscn. Existing scene nodes, signal connections, theme, and assets/scenes/data/scripts folder layout are preserved. Empty folders contain .gitkeep files so Git retains them.
+Import project.godot in Godot and press F5. The uploaded project declares Godot 4.7; import and headless combat checks also pass with Godot 4.6.3.
 
-Validation: imported and started with Godot 4.6.3 in headless mode. The uploaded script still generates a separate UI at runtime. Saved scene signals reference `_on_warden_pressed`, `_on_ranger_pressed`, `_on_occultist_pressed`, and `_on_end_turn_button_pressed`, which are not implemented in that script. These pre-existing issues are preserved for a separate integration fix.
+## Combat UI
+
+The saved combat scene drives the UI, with working hero and End Turn signals. Each hero has editable HealthBar and StressBar nodes; the enemy has a HealthBar. Health bars are red and stress bars are purple. Values update after combat actions.
+
+Heroes start with three cards. Each living hero retains unplayed cards and draws one new card at the beginning of every subsequent party turn. Played cards enter the discard pile; an empty draw pile reshuffles the discard pile. Action points reset to two. Scroll the card hand horizontally when it grows.
+
+Scene: scenes/combat/combatscene.tscn
+Script: scenes/combat/combatscene.gd
+Theme: assets/new_theme.tres
+
+The nested duplicate project and generated .godot cache are excluded. Empty folders use .gitkeep so Git preserves them.

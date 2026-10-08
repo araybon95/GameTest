@@ -1,6 +1,6 @@
 extends Control
 ## Ashen Expedition — self-contained combat vertical slice.
-## This script builds its own interface. Do not add or connect buttons in the scene tree.
+## Combat uses the saved scene nodes and their editor signal connections.
 ## Artwork is optional: drop transparent PNG files into the paths documented in README.md.
 
 const BG = "#141922"
@@ -63,7 +63,7 @@ var end_turn_button: Button
 
 
 func _ready() -> void:
-	# All visual nodes are created here; no brittle $Node/Paths or editor signals.
+	# Bind the saved scene UI; keep node paths stable for editor connections.
 	_build_interface()
 	_start_battle()
 
@@ -200,10 +200,6 @@ func _gain_block(hero_name: String, amount: int) -> void:
 func _end_turn() -> void:
 	if battle_over:
 		return
-	for hero_name in HERO_ORDER:
-		var state: Dictionary = hero_state[hero_name]
-		state["discard"].append_array(state["hand"])
-		state["hand"].clear()
 
 	_enemy_action()
 	if battle_over:
@@ -216,7 +212,7 @@ func _end_turn() -> void:
 		state["block"] = 0
 		if int(state["hp"]) > 0:
 			state["ap"] = 2
-			_draw_cards(hero_name, 3)
+			_draw_cards(hero_name, 1)
 		else:
 			state["ap"] = 0
 
@@ -297,10 +293,15 @@ func _refresh_all() -> void:
 			int(state["hp"]), int(state["max_hp"]), int(state["block"]),
 			int(state["ap"]), int(state["stress"])
 		]
+		var health: ProgressBar = button.get_node("HealthBar")
+		health.max_value = int(state["max_hp"])
+		health.value = int(state["hp"])
+		button.get_node("StressBar").value = int(state["stress"])
 		button.disabled = battle_over or int(state["hp"]) <= 0
 	enemy_label.text = "HOLLOW VILLAGER\nHP %d / 68     Block %d%s" % [
 		enemy_hp, enemy_block, "     Mark +%d" % enemy_mark_bonus if enemy_mark_bonus > 0 else ""
 	]
+	$Enemy/HealthBar.value = enemy_hp
 	enemy_intent_label.text = _enemy_intent_text()
 	end_turn_button.disabled = battle_over
 	end_turn_button.text = "END PARTY TURN" if not battle_over else "BATTLE FINISHED"
@@ -352,103 +353,49 @@ func _flash(target: Control, tint: Color) -> void:
 # _flash is the simple animation hook: later replace it with AnimationPlayer.
 
 func _build_interface() -> void:
-	var backdrop := ColorRect.new()
-	backdrop.color = Color(BG)
-	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(backdrop)
-	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var margins := MarginContainer.new()
-	add_child(margins)
-	margins.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for edge in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
-		margins.add_theme_constant_override(edge, 30)
-
-	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 18)
-	margins.add_child(page)
-
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 18)
-	page.add_child(header)
-	var titles := VBoxContainer.new()
-	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(titles)
-	titles.add_child(_make_label("ASHEN EXPEDITION", 42, Color(IVORY)))
-	titles.add_child(_make_label("EXPEDITION I   /   THE HOLLOW SETTLEMENT   /   OLD ROAD", 20, Color(GOLD)))
-	round_label = _make_label("ROUND 1", 26, Color(IVORY))
-	header.add_child(round_label)
-	var restart := _make_button("RESTART BATTLE", Vector2(230, 70))
-	restart.pressed.connect(_start_battle)
-	header.add_child(restart)
-
-	var battlefield := HBoxContainer.new()
-	battlefield.add_theme_constant_override("separation", 18)
-	battlefield.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(battlefield)
-
-	var party := VBoxContainer.new()
-	party.custom_minimum_size = Vector2(455, 0)
-	party.add_theme_constant_override("separation", 12)
-	battlefield.add_child(party)
-	party.add_child(_make_label("YOUR PARTY", 25, Color(GOLD)))
+	round_label = $RoundLabel
+	hand_title = $HandTitle
+	hand_container = $CardHand/Cards
+	log_container = $BattleLog
+	end_turn_button = $EndTurnButton
+	enemy_label = $EnemyInfo
+	enemy_intent_label = $EnemyIntent
+	enemy_art = $Enemy
+	$Background.color = Color(BG)
 	for hero_name in HERO_ORDER:
-		var hero_button := _make_button("", Vector2(440, 143))
-		hero_button.alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		hero_button.pressed.connect(_select_hero.bind(hero_name))
-		party.add_child(hero_button)
-		hero_buttons[hero_name] = hero_button
-		var portrait: Control = _art_slot(hero_button, "res://assets/characters/%s.png" % hero_name.to_lower(), hero_name.substr(0, 1), Vector2(100, 115))
-		portrait.position = Vector2(14, 14)
-		hero_portraits[hero_name] = portrait
-	party.add_spacer(false)
-	party.add_child(_make_label("Select any living hero to use their hand.", 18, Color(MUTED)))
+		var button: Button = get_node("Heros/" + hero_name)
+		hero_buttons[hero_name] = button
+		hero_portraits[hero_name] = button
+		_style_meter(button.get_node("HealthBar"), Color("#A44542"))
+		_style_meter(button.get_node("StressBar"), Color("#927CAD"))
+	_style_meter($Enemy/HealthBar, Color("#A44542"))
 
-	var enemy_panel := _make_panel(Color(PANEL_DARK))
-	enemy_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	battlefield.add_child(enemy_panel)
-	var enemy_column := VBoxContainer.new()
-	enemy_column.alignment = BoxContainer.ALIGNMENT_CENTER
-	enemy_column.add_theme_constant_override("separation", 16)
-	enemy_panel.add_child(enemy_column)
-	enemy_column.add_child(_make_label("ENCOUNTER 01", 24, Color(GOLD), true))
-	enemy_art = _art_slot(enemy_column, "res://assets/enemies/hollow_villager.png", "HOLLOW\nVILLAGER", Vector2(360, 275))
-	enemy_label = _make_label("HOLLOW VILLAGER", 28, Color(IVORY), true)
-	enemy_column.add_child(enemy_label)
-	enemy_intent_label = _make_label("INTENT", 23, Color(RED), true)
-	enemy_column.add_child(enemy_intent_label)
-	enemy_column.add_child(_make_label("Enemy art can be replaced with a PNG later.", 17, Color(MUTED), true))
 
-	var notes := _make_panel(Color(PANEL))
-	notes.custom_minimum_size = Vector2(410, 0)
-	battlefield.add_child(notes)
-	var notes_col := VBoxContainer.new()
-	notes_col.add_theme_constant_override("separation", 16)
-	notes.add_child(notes_col)
-	notes_col.add_child(_make_label("BATTLE LOG", 26, Color(GOLD)))
-	log_container = VBoxContainer.new()
-	log_container.add_theme_constant_override("separation", 12)
-	notes_col.add_child(log_container)
+func _style_meter(meter: ProgressBar, tint: Color) -> void:
+	var background := StyleBoxFlat.new()
+	background.bg_color = Color("#100F12")
+	background.set_corner_radius_all(3)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = tint
+	fill.set_corner_radius_all(3)
+	meter.add_theme_stylebox_override("background", background)
+	meter.add_theme_stylebox_override("fill", fill)
 
-	var bottom := _make_panel(Color(PANEL))
-	bottom.custom_minimum_size = Vector2(0, 335)
-	page.add_child(bottom)
-	var bottom_col := VBoxContainer.new()
-	bottom_col.add_theme_constant_override("separation", 12)
-	bottom.add_child(bottom_col)
-	hand_title = _make_label("HAND", 26, Color(IVORY))
-	bottom_col.add_child(hand_title)
-	var hand_row := HBoxContainer.new()
-	hand_row.add_theme_constant_override("separation", 12)
-	hand_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	bottom_col.add_child(hand_row)
-	hand_container = HBoxContainer.new()
-	hand_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hand_container.add_theme_constant_override("separation", 12)
-	hand_row.add_child(hand_container)
-	end_turn_button = _make_button("END PARTY TURN", Vector2(235, 230))
-	end_turn_button.pressed.connect(_end_turn)
-	hand_row.add_child(end_turn_button)
+
+func _on_warden_pressed() -> void:
+	_select_hero("Warden")
+
+
+func _on_ranger_pressed() -> void:
+	_select_hero("Ranger")
+
+
+func _on_occultist_pressed() -> void:
+	_select_hero("Occultist")
+
+
+func _on_end_turn_button_pressed() -> void:
+	_end_turn()
 
 
 func _create_card_view(card_id: String, card: Dictionary) -> Button:

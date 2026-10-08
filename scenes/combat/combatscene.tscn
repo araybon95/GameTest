@@ -19,10 +19,10 @@ script = ExtResource("1_gg2et")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1382760075]
 layout_mode = 0
-offset_left = 76.0
-offset_top = 341.0
-offset_right = 626.0
-offset_bottom = 471.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
 
 [node name="Heros" type="HBoxContainer" parent="." unique_id=527048530]
 layout_mode = 1
@@ -33,11 +33,11 @@ anchor_right = 0.074
 anchor_bottom = 0.064
 offset_left = 452.846
 offset_top = 548.88
-offset_right = 941.846
+offset_right = 1321.846
 offset_bottom = 756.88
 
 [node name="Warden" type="Button" parent="Heros" unique_id=340330064]
-custom_minimum_size = Vector2(160, 100)
+custom_minimum_size = Vector2(280, 208)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
@@ -45,7 +45,7 @@ theme_override_colors/font_hover_color = Color(0.95, 0.95, 0.95, 1)
 theme_override_colors/font_disabled_color = Color(0.875, 0.875, 0.875, 0.5)
 
 [node name="Ranger" type="Button" parent="Heros" unique_id=1839395654]
-custom_minimum_size = Vector2(160, 100)
+custom_minimum_size = Vector2(280, 208)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
@@ -53,7 +53,7 @@ theme_override_colors/font_hover_color = Color(0.95, 0.95, 0.95, 1)
 theme_override_colors/font_disabled_color = Color(0.875, 0.875, 0.875, 0.5)
 
 [node name="Occultist" type="Button" parent="Heros" unique_id=939120485]
-custom_minimum_size = Vector2(160, 100)
+custom_minimum_size = Vector2(280, 208)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
@@ -72,12 +72,18 @@ offset_top = 43.96
 offset_right = -80.078
 offset_bottom = 199.96
 
-[node name="CardHand" type="HBoxContainer" parent="." unique_id=85743675]
+[node name="CardHand" type="ScrollContainer" parent="." unique_id=85743675]
 layout_mode = 0
-offset_left = 1016.0
-offset_top = 265.0
-offset_right = 1296.0
-offset_bottom = 305.0
+offset_left = 100.0
+offset_top = 270.0
+offset_right = 1300.0
+offset_bottom = 530.0
+
+vertical_scroll_mode = 0
+
+[node name="Cards" type="HBoxContainer" parent="CardHand"]
+layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="EndTurnButton" type="Button" parent="." unique_id=791159285]
 layout_mode = 0
@@ -85,6 +91,130 @@ offset_left = 1557.0
 offset_top = 524.0
 offset_right = 1733.0
 offset_bottom = 563.0
+
+[node name="HealthBar" type="ProgressBar" parent="Heros/Warden"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 152.0
+offset_right = 268.0
+offset_bottom = 168.0
+mouse_filter = 2
+max_value = 55.0
+value = 55.0
+show_percentage = false
+
+[node name="StressBar" type="ProgressBar" parent="Heros/Warden"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 180.0
+offset_right = 268.0
+offset_bottom = 196.0
+mouse_filter = 2
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="HealthBar" type="ProgressBar" parent="Heros/Ranger"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 152.0
+offset_right = 268.0
+offset_bottom = 168.0
+mouse_filter = 2
+max_value = 38.0
+value = 38.0
+show_percentage = false
+
+[node name="StressBar" type="ProgressBar" parent="Heros/Ranger"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 180.0
+offset_right = 268.0
+offset_bottom = 196.0
+mouse_filter = 2
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="HealthBar" type="ProgressBar" parent="Heros/Occultist"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 152.0
+offset_right = 268.0
+offset_bottom = 168.0
+mouse_filter = 2
+max_value = 34.0
+value = 34.0
+show_percentage = false
+
+[node name="StressBar" type="ProgressBar" parent="Heros/Occultist"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 180.0
+offset_right = 268.0
+offset_bottom = 196.0
+mouse_filter = 2
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="HealthBar" type="ProgressBar" parent="Enemy"]
+layout_mode = 0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -18.0
+mouse_filter = 2
+max_value = 68.0
+value = 68.0
+show_percentage = false
+
+[node name="RoundLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 35.0
+offset_right = 350.0
+offset_bottom = 95.0
+theme_override_font_sizes/font_size = 24
+text = "ROUND 1"
+mouse_filter = 2
+
+[node name="EnemyInfo" type="Label" parent="."]
+layout_mode = 0
+offset_left = 950.0
+offset_top = 65.0
+offset_right = 1400.0
+offset_bottom = 125.0
+theme_override_font_sizes/font_size = 24
+text = "HOLLOW VILLAGER"
+mouse_filter = 2
+
+[node name="EnemyIntent" type="Label" parent="."]
+layout_mode = 0
+offset_left = 950.0
+offset_top = 140.0
+offset_right = 1400.0
+offset_bottom = 200.0
+theme_override_font_sizes/font_size = 24
+text = "INTENT"
+mouse_filter = 2
+
+[node name="HandTitle" type="Label" parent="."]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 230.0
+offset_right = 1200.0
+offset_bottom = 290.0
+theme_override_font_sizes/font_size = 24
+text = "HAND"
+mouse_filter = 2
+
+[node name="BattleLog" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 1400.0
+offset_top = 650.0
+offset_right = 1850.0
+offset_bottom = 1000.0
 
 [connection signal="pressed" from="Heros/Warden" to="." method="_on_warden_pressed"]
 [connection signal="pressed" from="Heros/Ranger" to="." method="_on_ranger_pressed"]
