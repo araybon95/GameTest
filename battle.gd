@@ -2,10 +2,10 @@ extends Control
 ## Ashen Expedition — self-contained combat vertical slice.
 ## Artwork: drop transparent PNG files into the paths documented in README.md.
 
-const BG = "#141922"
-const PANEL = "#222B39"
-const PANEL_DARK = "#1A2230"
-const GOLD = "#B99A65"
+const BG = "#100F12"
+const PANEL = "#242024"
+const PANEL_DARK = "#191619"
+const GOLD = "#C6A16A"
 const IVORY = "#F5E9D5"
 const MUTED = "#BCC4CC"
 const RED = "#E9978B"
@@ -42,6 +42,10 @@ const CARD_DATA = {
 var hero_state: Dictionary = {}
 var hero_buttons: Dictionary = {}
 var hero_portraits: Dictionary = {}
+var hero_meters: Dictionary = {}
+var hero_details: Dictionary = {}
+var energy_label: Label
+var enemy_health: ProgressBar
 var selected_hero: String = "Warden"
 var enemy_hp: int = 68
 var enemy_block: int = 0
@@ -269,7 +273,7 @@ func _enemy_intent_text() -> String:
 	if battle_over:
 		return "Encounter finished"
 	if (round_number - 1) % 4 == 2:
-		return "INTENT: Brace · Gain 8 Block"
+		return "◇  BRACE  ·  8 BLOCK"
 	var target: String = HERO_ORDER[(round_number - 1) % HERO_ORDER.size()]
 	if int(hero_state[target]["hp"]) <= 0:
 		for candidate in HERO_ORDER:
@@ -279,7 +283,7 @@ func _enemy_intent_text() -> String:
 	var damage: int = 7 + ((round_number - 1) % 3) * 2
 	if enemy_weak_rounds > 0:
 		damage = maxi(0, damage - 3)
-	return "INTENT: Attack %s for %d" % [target, damage]
+	return "⚔  %d DAMAGE  →  %s" % [damage, target]
 
 
 func _refresh_all() -> void:
@@ -291,15 +295,20 @@ func _refresh_all() -> void:
 	for hero_name in HERO_ORDER:
 		var state: Dictionary = hero_state[hero_name]
 		var button: Button = hero_buttons[hero_name]
-		button.text = "%s%s\nHP %d/%d    Block %d    AP %d/2\nStress %d/100" % [
-			"▶ " if hero_name == selected_hero else "", hero_name.to_upper(),
-			int(state["hp"]), int(state["max_hp"]), int(state["block"]),
-			int(state["ap"]), int(state["stress"])
-		]
+		button.text = ""
+		var selected: bool = hero_name == selected_hero
+		button.add_theme_stylebox_override("normal", _style(Color("#362B28") if selected else Color(PANEL), Color(GOLD) if selected else Color("#514342")))
+		hero_details[hero_name].text = "%s  %s\n%d / %d HP   ·   %d BLOCK   ·   %d AP" % ["◆" if selected else "◇", hero_name.to_upper(), int(state["hp"]), int(state["max_hp"]), int(state["block"]), int(state["ap"])]
+		hero_meters[hero_name][0].max_value = int(state["max_hp"])
+		hero_meters[hero_name][0].value = int(state["hp"])
+		hero_meters[hero_name][1].value = int(state["stress"])
+
 		button.disabled = battle_over or int(state["hp"]) <= 0
 	enemy_label.text = "HOLLOW VILLAGER\nHP %d / 68     Block %d%s" % [
 		enemy_hp, enemy_block, "     Mark +%d" % enemy_mark_bonus if enemy_mark_bonus > 0 else ""
 	]
+	enemy_health.value = enemy_hp
+	energy_label.text = "%d / 2\nACTION POINTS" % int(hero["ap"])
 	enemy_intent_label.text = _enemy_intent_text()
 	end_turn_button.disabled = battle_over
 	end_turn_button.text = "END PARTY TURN" if not battle_over else "BATTLE FINISHED"
@@ -374,7 +383,7 @@ func _build_interface() -> void:
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(titles)
 	titles.add_child(_make_label("ASHEN EXPEDITION", 42, Color(IVORY)))
-	titles.add_child(_make_label("EXPEDITION I   /   THE HOLLOW SETTLEMENT   /   OLD ROAD", 20, Color(GOLD)))
+	titles.add_child(_make_label("THE OLD ROAD    /    ENCOUNTER I    /    THE HOLLOW SETTLEMENT", 20, Color(GOLD)))
 	round_label = _make_label("ROUND 1", 26, Color(IVORY))
 	header.add_child(round_label)
 	var restart := _make_button("RESTART BATTLE", Vector2(230, 70))
@@ -387,18 +396,32 @@ func _build_interface() -> void:
 	page.add_child(battlefield)
 
 	var party := VBoxContainer.new()
-	party.custom_minimum_size = Vector2(455, 0)
+	party.custom_minimum_size = Vector2(390, 0)
 	party.add_theme_constant_override("separation", 12)
 	battlefield.add_child(party)
 	party.add_child(_make_label("YOUR PARTY", 25, Color(GOLD)))
 	for hero_name in HERO_ORDER:
-		var hero_button := _make_button("", Vector2(440, 143))
+		var hero_button := _make_button("", Vector2(370, 145))
 		hero_button.alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hero_button.pressed.connect(_select_hero.bind(hero_name))
 		party.add_child(hero_button)
 		hero_buttons[hero_name] = hero_button
 		var portrait: Control = _art_slot(hero_button, "res://assets/characters/%s.png" % hero_name.to_lower(), hero_name.substr(0, 1), Vector2(100, 115))
 		portrait.position = Vector2(14, 14)
+		var info := VBoxContainer.new()
+		hero_button.add_child(info)
+		info.position = Vector2(128, 16)
+		info.size = Vector2(226, 116)
+		info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var detail := _make_label("", 17, Color(IVORY))
+		info.add_child(detail)
+		hero_details[hero_name] = detail
+		var health := _make_meter(100, Color("#A44542"))
+		info.add_child(health)
+		info.add_child(_make_label("STRESS", 12, Color(MUTED)))
+		var stress := _make_meter(100, Color("#927CAD"))
+		info.add_child(stress)
+		hero_meters[hero_name] = [health, stress]
 		hero_portraits[hero_name] = portrait
 	party.add_spacer(false)
 	party.add_child(_make_label("Select any living hero to use their hand.", 18, Color(MUTED)))
@@ -411,15 +434,17 @@ func _build_interface() -> void:
 	enemy_column.add_theme_constant_override("separation", 16)
 	enemy_panel.add_child(enemy_column)
 	enemy_column.add_child(_make_label("ENCOUNTER 01", 24, Color(GOLD), true))
-	enemy_art = _art_slot(enemy_column, "res://assets/enemies/hollow_villager.png", "HOLLOW\nVILLAGER", Vector2(360, 275))
+	enemy_art = _art_slot(enemy_column, "res://assets/enemies/hollow_villager.png", "HOLLOW\nVILLAGER", Vector2(300, 245))
 	enemy_label = _make_label("HOLLOW VILLAGER", 28, Color(IVORY), true)
 	enemy_column.add_child(enemy_label)
+	enemy_health = _make_meter(68, Color("#A44542"))
+	enemy_column.add_child(enemy_health)
 	enemy_intent_label = _make_label("INTENT", 23, Color(RED), true)
 	enemy_column.add_child(enemy_intent_label)
 	enemy_column.add_child(_make_label("Enemy art can be replaced with a PNG later.", 17, Color(MUTED), true))
 
 	var notes := _make_panel(Color(PANEL))
-	notes.custom_minimum_size = Vector2(410, 0)
+	notes.custom_minimum_size = Vector2(290, 0)
 	battlefield.add_child(notes)
 	var notes_col := VBoxContainer.new()
 	notes_col.add_theme_constant_override("separation", 16)
@@ -427,10 +452,15 @@ func _build_interface() -> void:
 	notes_col.add_child(_make_label("BATTLE LOG", 26, Color(GOLD)))
 	log_container = VBoxContainer.new()
 	log_container.add_theme_constant_override("separation", 12)
-	notes_col.add_child(log_container)
+	var log_scroll := ScrollContainer.new()
+	log_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	log_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	notes_col.add_child(log_scroll)
+	log_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	log_scroll.add_child(log_container)
 
 	var bottom := _make_panel(Color(PANEL))
-	bottom.custom_minimum_size = Vector2(0, 335)
+	bottom.custom_minimum_size = Vector2(0, 340)
 	page.add_child(bottom)
 	var bottom_col := VBoxContainer.new()
 	bottom_col.add_theme_constant_override("separation", 12)
@@ -444,10 +474,21 @@ func _build_interface() -> void:
 	hand_container = HBoxContainer.new()
 	hand_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hand_container.add_theme_constant_override("separation", 12)
-	hand_row.add_child(hand_container)
-	end_turn_button = _make_button("END PARTY TURN", Vector2(235, 230))
+	var card_scroll := ScrollContainer.new()
+	card_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	hand_row.add_child(card_scroll)
+	card_scroll.add_child(hand_container)
+	end_turn_button = _make_button("END PARTY TURN", Vector2(190, 85))
 	end_turn_button.pressed.connect(_end_turn)
-	hand_row.add_child(end_turn_button)
+	var turn_controls := VBoxContainer.new()
+	turn_controls.custom_minimum_size.x = 190
+	hand_row.add_child(turn_controls)
+	energy_label = _make_label("", 25, Color(GOLD), true)
+	turn_controls.add_child(energy_label)
+	turn_controls.add_spacer(false)
+	turn_controls.add_child(end_turn_button)
 
 
 func _create_card_view(card_id: String, card: Dictionary) -> Button:
@@ -470,11 +511,43 @@ func _create_card_view(card_id: String, card: Dictionary) -> Button:
 	var description: Label = _make_label(str(card["description"]), 17, Color(IVORY), true)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	contents.add_child(description)
+	button.mouse_entered.connect(_card_hover.bind(button, true))
+	button.mouse_exited.connect(_card_hover.bind(button, false))
+	button.focus_entered.connect(_card_hover.bind(button, true))
+	button.focus_exited.connect(_card_hover.bind(button, false))
 	return button
 
 
+func _card_hover(button: Button, active: bool) -> void:
+	if button.disabled:
+		return
+	if button.has_meta("hover_tween"):
+		var previous: Tween = button.get_meta("hover_tween")
+		previous.kill()
+	button.pivot_offset = button.size / 2.0
+	button.z_index = 10 if active else 0
+	var tween := create_tween()
+	button.set_meta("hover_tween", tween)
+	tween.tween_property(button, "scale", Vector2(1.04, 1.04) if active else Vector2.ONE, 0.12)
+
+
+func _make_meter(maximum: float, tint: Color) -> ProgressBar:
+	var meter := ProgressBar.new()
+	meter.max_value = maximum
+	meter.show_percentage = false
+	meter.custom_minimum_size = Vector2(0, 12)
+	meter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	meter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	meter.add_theme_stylebox_override("background", _style(Color("#100F12"), Color("#514342")))
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = tint
+	fill.set_corner_radius_all(3)
+	meter.add_theme_stylebox_override("fill", fill)
+	return meter
+
+
 func _art_slot(parent: Control, texture_path: String, fallback: String, min_size: Vector2) -> Control:
-	var frame := _make_panel(Color("#303848"))
+	var frame := _make_panel(Color("#30282C"))
 	frame.custom_minimum_size = min_size
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(frame)
@@ -518,7 +591,7 @@ func _make_button(value: String, min_size: Vector2) -> Button:
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color", "font_focus_color"]:
 		button.add_theme_color_override(state, Color(IVORY))
 	var normal := _style(Color(PANEL), Color(GOLD))
-	var hover := _style(Color("#3A475B"), Color("#DDC58B"))
+	var hover := _style(Color("#44352F"), Color("#DDC58B"))
 	var pressed := _style(Color("#574934"), Color("#DDC58B"))
 	var disabled := _style(Color("#343941"), Color("#6E7276"))
 	button.add_theme_stylebox_override("normal", normal)
@@ -534,7 +607,7 @@ func _style(fill: Color, outline: Color) -> StyleBoxFlat:
 	box.bg_color = fill
 	box.border_color = outline
 	box.set_border_width_all(2)
-	box.set_corner_radius_all(8)
-	box.set_content_margin_all(14)
+	box.set_corner_radius_all(4)
+	box.set_content_margin_all(10)
 	return box
 
