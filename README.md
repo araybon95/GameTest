@@ -8,13 +8,13 @@ Open `project.godot` in Godot 4.6 or later and press F6 on `battle.tscn`, or F5 
 
 Select a living hero, play cards using their action points, and end the party turn to resolve enemy intent. Restart Battle resets the encounter. Health and stress meters, block values, and action points update with combat. Cards highlight and enlarge on hover or keyboard focus. The hand scrolls horizontally when needed.
 
-Artwork is optional. Add transparent PNGs at:
+Artwork is added later. Add transparent PNGs at: USE KRITA
 
 - `assets/characters/warden.png`, `ranger.png`, and `occultist.png`
 - `assets/enemies/hollow_villager.png`
 - `assets/cards/<card_id>.png` (IDs are listed in `CARD_DATA` in `battle.gd`)
 
-Missing artwork uses text placeholders. No artwork from the reference games is included.
+Missing artwork uses text placeholders.
 
 For cloud/headless validation, use writable XDG directories:
 
