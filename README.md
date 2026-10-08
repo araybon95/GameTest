@@ -1,28 +1,7 @@
-# Ashen Expedition
+# GameTest
 
-Scripts and materials for GoDot
+Project imported from Updated1.zip. The outer project is the source; the nested duplicate and generated Godot cache are excluded.
 
-A Godot 4 combat prototype with three hero decks, party turns, and a dark card battle interface.
+Import project.godot into Godot 4.7 (the version declared by the uploaded project). The combat scene is scenes/combat/combatscene.tscn. Existing scene nodes, signal connections, theme, and assets/scenes/data/scripts folder layout are preserved. Empty folders contain .gitkeep files so Git retains them.
 
-Open `project.godot` in Godot 4.6 or later and press F6 on `battle.tscn`, or F5 to run the project. The original `Scripts` file is now `battle.gd`.
-
-Select a living hero, play cards using their action points, and end the party turn to resolve enemy intent. Restart Battle resets the encounter. Health and stress meters, block values, and action points update with combat. Cards highlight and enlarge on hover or keyboard focus. The hand scrolls horizontally when needed.
-
-Artwork is added later. Add transparent PNGs at: USE KRITA
-
-- `assets/characters/warden.png`, `ranger.png`, and `occultist.png`
-- `assets/enemies/hollow_villager.png`
-- `assets/cards/<card_id>.png` (IDs are listed in `CARD_DATA` in `battle.gd`)
-
-Missing artwork uses text placeholders.
-
-For cloud/headless validation, use writable XDG directories:
-
-```sh
-export XDG_CACHE_HOME=/workspace/.cache
-export XDG_DATA_HOME=/workspace/.local/share
-export XDG_CONFIG_HOME=/workspace/.config
-mkdir -p "$XDG_CACHE_HOME" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
-godot --headless --path /workspace/GameTest --editor --import --quit
-godot --headless --path /workspace/GameTest --quit-after 10
-```
+Validation: imported and started with Godot 4.6.3 in headless mode. The uploaded script still generates a separate UI at runtime. Saved scene signals reference `_on_warden_pressed`, `_on_ranger_pressed`, `_on_occultist_pressed`, and `_on_end_turn_button_pressed`, which are not implemented in that script. These pre-existing issues are preserved for a separate integration fix.
